@@ -319,7 +319,7 @@ class CPO:
             pass
 
     def print_update(self):
-        update_message = '[Episode]: {0} | [Avg. Reward]: {1} | [Avg. Cost]: {2} | [Elapsed Time]: {3}'
+        update_message = 'Episode: {0}\t Avg. Reward: {1:.4f}\t Avg. Cost: {2:.4f}\t Elapsed Time: {3}'
         elapsed_time_str = ''.join(str(self.elapsed_time)).split('.')[0]
         format_args = (self.episode_num, self.mean_rewards[-1], self.mean_costs[-1], elapsed_time_str)
         print(update_message.format(*format_args))

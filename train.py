@@ -1,14 +1,18 @@
 from argparse import ArgumentParser
-from envs.point_gather import PointGatherEnv
+# from envs.point_gather import PointGatherEnv
 import gym
+import gym_fairrec
 import torch
+import yaml
 from yaml import load
+import numpy as np
 
 from cpo import CPO
 from memory import Memory
 from models import build_diag_gauss_policy, build_mlp
 from simulators import SinglePathSimulator
 from torch_utils.torch_utils import get_device
+from read_data import read_file, read_embeddings, Embeddings
 
 config_filename = 'config.yaml'
 
@@ -23,13 +27,14 @@ parser.add_argument('--continue', dest='continue_from_file', action='store_true'
 parser.add_argument('--model-name', type=str, dest='model_name', required=True,
                     help='The entry in config.yaml from which settings' \
                     'should be loaded.')
-parser.add_argument('--simulator', dest='simulator_type', type=str, default='single-path',
-                    choices=['single-path', 'vine'], help='The type of simulator' \
-                    ' to use when collecting training experiences.')
+# parser.add_argument('--simulator', dest='simulator_type', type=str, default='single-path',
+#                     choices=['single-path', 'vine'], help='The type of simulator' \
+#                     ' to use when collecting training experiences.')
+
 args = parser.parse_args()
 continue_from_file = args.continue_from_file
 model_name = args.model_name
-config = load(open(config_filename, 'r'))[model_name]
+config = load(open(config_filename, 'r'), Loader=yaml.FullLoader)[model_name]
 
 state_dim = config['state_dim']
 action_dim = config['action_dim']
@@ -54,7 +59,20 @@ policy.to(device)
 value_fun.to(device)
 cost_fun.to(device)
 
-simulator = SinglePathSimulator(env_name, policy, n_trajectories, trajectory_len)
+#prepare data and embedding for fairrec env
+data = read_file('./data/train.csv')
+cost = np.load('./data/cost.npy')
+embeddings = Embeddings(read_embeddings('./data/embeddings.csv'))
+env_args = {}
+env_args['data'] = data
+env_args['embeddings'] = embeddings
+env_args['cost'] = cost
+env_args['alpha'] = 0.5
+env_args['gamma'] = 0.9
+env_args['fixed_length'] = True
+env_args['trajectory_length'] = 5
+
+simulator = SinglePathSimulator(env_name, policy, n_trajectories, trajectory_len, **env_args)
 cpo = CPO(policy, value_fun, cost_fun, simulator, model_name=model_name,
           bias_red_cost=bias_red_cost, max_constraint_val=max_constraint_val)
 

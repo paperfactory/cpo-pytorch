@@ -26,4 +26,23 @@ point_gather:
     state_dim: 29
     action_dim: 2
     max_timesteps: 16
-    n_trajectories: 10000
+    n_trajectories: 
+
+gym_fairrec:
+    env_name: fairrec-v0
+
+    policy_hidden_dims: [64, 64]
+    vf_hidden_dims: [64, 64]
+    cf_hidden_dims: [64, 64]
+
+    max_timesteps: 1000
+    n_episodes: 250
+    n_trajectories: 100
+
+    max_constraint_val: 0.1
+    bias_red_cost: 1.0
+
+    state_dim: 1200
+    action_dim: 400
+    max_timesteps: 16
+    n_trajectories: 10
